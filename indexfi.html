@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ridgeline Checkout Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: thin training toolbar, then one simple shop page (product + price + buy button) followed by a short checkout step. */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1d2320; --muted:#5d665f; --line:#d9ddd6;
+  --brand:#2f5d46; --brand-ink:#ffffff; --warn:#b4471f; --warn-soft:#fbe9e1; --ok-soft:#e3f2e8;
+  --bar:#1d2320; --bar-ink:#eef0ec; --grey-btn:#d9ddd6; --grey-btn-ink:#7a837c;
+  --f-display:"Archivo",system-ui,sans-serif; --f-body:"Archivo",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141816; --surface:#1d2320; --ink:#e7ebe6; --muted:#9aa49c; --line:#2f3732;
+  --brand:#6fae8b; --brand-ink:#0f1411; --warn:#f08a62; --warn-soft:#3a231a; --ok-soft:#1b3326;
+  --bar:#0b0d0c; --bar-ink:#e7ebe6; --grey-btn:#2f3732; --grey-btn-ink:#8a948c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141816; --surface:#1d2320; --ink:#e7ebe6; --muted:#9aa49c; --line:#2f3732;
+  --brand:#6fae8b; --brand-ink:#0f1411; --warn:#f08a62; --warn-soft:#3a231a; --ok-soft:#1b3326;
+  --bar:#0b0d0c; --bar-ink:#e7ebe6; --grey-btn:#2f3732; --grey-btn-ink:#8a948c; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:760px;margin:0 auto}
+.lab{background:var(--bar);color:var(--bar-ink)}
+.lab .wrap{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding-block:10px;max-width:1000px}
+.lab p{margin:0;font-family:var(--f-mono);font-size:12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 13px var(--f-body);border:1px solid #ffffff40;background:transparent;color:var(--bar-ink);padding:6px 12px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--bar-ink);color:var(--bar)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+header.store{border-bottom:1px solid var(--line);background:var(--surface)}
+header.store .wrap{padding-block:14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.logo{font:800 20px var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+.logo small{display:block;font:400 10px var(--f-mono);letter-spacing:.05em;color:var(--muted);text-transform:none}
+main .wrap{display:flex;flex-direction:column;gap:20px;padding-block:24px 48px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.step{font:500 12px var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.product{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:540px){.product{grid-template-columns:minmax(0,1fr)}}
+.photo{aspect-ratio:1;max-width:100%;border-radius:10px;background:linear-gradient(150deg,var(--brand) 0%,#3c7a5b 45%,var(--line) 100%);display:flex;align-items:flex-end;padding:12px;color:#fff;font:500 12px var(--f-mono)}
+h1{font:800 26px var(--f-display);margin:0;text-wrap:balance}
+h2{font:600 18px var(--f-display);margin:0}
+.price{font:800 30px var(--f-display);font-variant-numeric:tabular-nums}
+.note{font-size:14px;color:var(--muted);margin:0}
+.btn{font:600 17px var(--f-body);padding:14px 18px;border-radius:8px;border:0;cursor:pointer;width:100%}
+.btn.primary{background:var(--brand);color:var(--brand-ink)}
+.btn.weak{background:var(--grey-btn);color:var(--grey-btn-ink);font-weight:500;font-size:13px;padding:8px 12px;width:auto;align-self:flex-start}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:480px){.grid2{grid-template-columns:1fr}}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+input{font:16px var(--f-body);padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.row{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
+.row.total{font-weight:800;font-size:18px;border-top:1px solid var(--line);padding-top:10px}
+.trust{display:flex;flex-direction:column;gap:4px;font-size:14px;background:var(--ok-soft);border-radius:8px;padding:12px}
+.stars{color:#c98a12;letter-spacing:2px}
+.rel{position:relative}
+</style>
+</head>
+<body>
+
+<div class="lab">
+  <div class="wrap">
+    <p>Ridgeline · fictional shop for a class exercise</p>
+      </div>
+</div>
+
+<!-- ============ VERSION A ============ -->
+<section id="A">
+  <header class="store"><div class="wrap"><div class="logo">Ridgeline<small>outdoor gear · fictional brand</small></div></div></header>
+  <main><div class="wrap">
+
+    <div class="card">
+      <span class="step">Step 1 · Product</span>
+      <div class="product">
+        <div class="photo" aria-hidden="true">Trailhead 35L</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <h1>Trailhead 35L backpack</h1>
+          <p class="note">Lightweight hiking backpack. Colour: Slate.</p>
+          <div class="rel">
+            <div class="price">€89.00</div>
+            <p class="note">+ shipping, calculated at checkout</p>
+            
+          </div>
+          <div class="rel" style="display:flex">
+            <button class="btn weak" type="button">continue</button>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card rel">
+      <span class="step">Step 2 · Checkout</span>
+      <h2>Create an account to continue</h2>
+      <p class="note">You must register before you can buy.</p>
+      <div class="grid2">
+        <label for="a-email">Email<input id="a-email" type="email"></label>
+        <label for="a-pass">Password (min. 10 characters)<input id="a-pass" type="password"></label>
+        <label for="a-pass2">Repeat password<input id="a-pass2" type="password"></label>
+        <label for="a-dob">Date of birth<input id="a-dob" placeholder="DD/MM/YYYY"></label>
+      </div>
+      <button class="btn weak" type="button">submit</button>
+      
+    </div>
+
+    <p class="note rel" style="padding:4px 0">No reviews yet. Returns: see FAQ.</p>
+
+      </div></main>
+</section>
+
+
+</body>
+</html>
